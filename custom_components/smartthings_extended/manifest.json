@@ -1,0 +1,13 @@
+{
+  "domain": "smartthings_extended",
+  "name": "SmartThings Extended",
+  "codeowners": ["@gdam12886"],
+  "config_flow": true,
+  "dependencies": ["smartthings"],
+  "documentation": "https://github.com/gdam12886/smartthings-extended",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "issue_tracker": "https://github.com/gdam12886/smartthings-extended/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

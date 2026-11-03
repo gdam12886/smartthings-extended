@@ -1,0 +1,105 @@
+{
+  "title": "SmartThings Extended",
+  "config": {
+    "step": {
+      "user": {
+        "title": "SmartThings account",
+        "description": "Choose the native SmartThings account to extend.",
+        "data": {
+          "native_entry_id": "SmartThings account"
+        }
+      },
+      "devices": {
+        "title": "Hood controls",
+        "description": "Choose the cooktops and extra hood controls to add.",
+        "data": {
+          "device_ids": "Cooktops",
+          "features": "Extra controls",
+          "timer_max_minutes": "Maximum timer duration"
+        },
+        "data_description": {
+          "timer_max_minutes": "Input limit in minutes. Set this to a duration supported by your hood."
+        }
+      }
+    },
+    "error": {
+      "native_not_ready": "The selected native SmartThings account is not ready.",
+      "invalid_selection": "Select at least one available cooktop and one feature group."
+    },
+    "abort": {
+      "native_required": "Set up the native SmartThings integration and wait for it to connect first.",
+      "no_supported_devices": "This account has no cooktops with a hood component.",
+      "already_configured": "This SmartThings account is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Hood controls",
+        "data": {
+          "device_ids": "Cooktops",
+          "features": "Extra controls",
+          "timer_max_minutes": "Maximum timer duration"
+        }
+      }
+    },
+    "error": {
+      "invalid_selection": "Select at least one available cooktop and one feature group."
+    },
+    "abort": {
+      "native_required": "Reconnect the native SmartThings account first."
+    }
+  },
+  "selector": {
+    "features": {
+      "options": {
+        "light": "Hood light",
+        "fan": "Hood fan",
+        "timer": "Native hood timer"
+      }
+    }
+  },
+  "entity": {
+    "light": {
+      "hood_light": {
+        "name": "Hood light"
+      }
+    },
+    "fan": {
+      "hood_fan": {
+        "name": "Hood fan"
+      }
+    },
+    "number": {
+      "hood_timer_duration": {
+        "name": "Hood timer duration"
+      }
+    },
+    "button": {
+      "hood_timer_start": {
+        "name": "Start hood timer"
+      },
+      "hood_timer_cancel": {
+        "name": "Cancel hood timer"
+      }
+    },
+    "sensor": {
+      "hood_timer_remaining": {
+        "name": "Hood timer remaining"
+      },
+      "hood_timer_status": {
+        "name": "Hood timer status",
+        "state": {
+          "idle": "Idle",
+          "running": "Running",
+          "paused": "Paused"
+        }
+      }
+    },
+    "binary_sensor": {
+      "hood_connection": {
+        "name": "Hood connection"
+      }
+    }
+  }
+}

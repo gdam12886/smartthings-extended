@@ -1,0 +1,7 @@
+SmartThings Extended
+Copyright 2026 gdam12886 and contributors.
+
+Contains algorithms and capability handling adapted from Home Assistant Core's
+SmartThings integration, Copyright The Home Assistant Authors.
+Source: https://github.com/home-assistant/core/tree/dev/homeassistant/components/smartthings
+Licensed under the Apache License, Version 2.0. See LICENSE.

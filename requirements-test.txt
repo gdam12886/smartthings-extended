@@ -1,0 +1,4 @@
+# Matches the installed Home Assistant 2026.9.3 release.
+pytest-homeassistant-custom-component==0.13.366
+pysmartthings==4.0.1
+ruff==0.17.3
