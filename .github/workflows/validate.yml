@@ -16,6 +16,7 @@ jobs:
       - run: python -m pip install -r requirements-test.txt
       - run: ruff check .
       - run: ruff format --check .
+      - run: mypy --follow-imports=silent --ignore-missing-imports custom_components/smartthings_extended
       - run: pytest -q
   hacs:
     runs-on: ubuntu-latest
