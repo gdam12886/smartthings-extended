@@ -1,4 +1,4 @@
-"""Select the native account, devices, and extra hood features."""
+"""Select the native account, appliances, and feature groups."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from .const import (
     NAME,
     NATIVE_DOMAIN,
 )
-from .native import hood_devices, native_data, source_entry
+from .native import native_data, source_entry, supported_devices
 
 
 def device_schema(devices: dict[str, str], values: dict[str, Any]) -> vol.Schema:
@@ -120,7 +120,7 @@ class SmartThingsExtendedFlow(config_entries.ConfigFlow, domain=DOMAIN):
         source = source_entry(self.hass, self._source_id)
         if source is None or native_data(source) is None:
             return self.async_abort(reason="native_required")
-        devices = hood_devices(source)
+        devices = supported_devices(source)
         if not devices:
             return self.async_abort(reason="no_supported_devices")
         errors: dict[str, str] = {}
@@ -141,7 +141,7 @@ class ExtendedOptionsFlow(config_entries.OptionsFlowWithReload):
         source = source_entry(self.hass, self.config_entry.data[CONF_SOURCE])
         if source is None or native_data(source) is None:
             return self.async_abort(reason="native_required")
-        devices = hood_devices(source)
+        devices = supported_devices(source)
         errors: dict[str, str] = {}
         if user_input is not None:
             if valid_selection(user_input, devices):

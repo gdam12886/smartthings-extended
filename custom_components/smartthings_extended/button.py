@@ -1,14 +1,15 @@
 """Start and cancel the native hood countdown."""
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from pysmartthings import Attribute, Capability, Command
 
 from . import ExtendedConfigEntry
+from .appliances import appliance_components, can_start, cavity_active, enabled
 from .coordinator import HoodCoordinator
-from .entity import HoodEntity
+from .entity import ApplianceEntity, HoodEntity
 
 
 async def async_setup_entry(
@@ -17,6 +18,36 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     runtime = entry.runtime_data
+    if "appliance" in runtime.features:
+        coordinator = runtime.coordinator
+        known: set[tuple[str, str, Command]] = set()
+
+        @callback
+        def discover() -> None:
+            entities = []
+            for device_id, component in appliance_components(coordinator):
+                for capability, command in (
+                    (Capability.OVEN_OPERATING_STATE, Command.STOP),
+                    (Capability.OVEN_OPERATING_STATE, Command.START),
+                    (Capability.REFRESH, Command.REFRESH),
+                ):
+                    key = (device_id, component, command)
+                    if (
+                        key not in known
+                        and enabled(coordinator, device_id, component, capability)
+                        and (
+                            command is not Command.START
+                            or can_start(coordinator, device_id, component)
+                        )
+                    ):
+                        entities.append(
+                            ApplianceButton(coordinator, device_id, component, capability, command)
+                        )
+                        known.add(key)
+            async_add_entities(entities)
+
+        discover()
+        entry.async_on_unload(coordinator.async_add_listener(discover))
     if "timer" in runtime.features:
         async_add_entities(
             HoodTimerButton(runtime.coordinator, device_id, command)
@@ -47,3 +78,50 @@ class HoodTimerButton(HoodEntity, ButtonEntity):
         await self.coordinator.command(
             self.device_id, Capability.SAMSUNG_CE_COUNT_DOWN_TIMER, self.command
         )
+
+
+class ApplianceButton(ApplianceEntity, ButtonEntity):
+    def __init__(
+        self,
+        coordinator: HoodCoordinator,
+        device_id: str,
+        component: str,
+        capability: Capability,
+        command: Command,
+    ) -> None:
+        key = "refresh" if command is Command.REFRESH else f"oven_{command.value}"
+        super().__init__(coordinator, device_id, component, key, capability)
+        self.command = command
+        self._attr_icon = {
+            Command.REFRESH: "mdi:refresh",
+            Command.STOP: "mdi:stop",
+            Command.START: "mdi:play",
+        }[command]
+
+    @property
+    def available(self) -> bool:
+        return (
+            super().available
+            and (
+                self.command is Command.REFRESH
+                or cavity_active(self.coordinator, self.device_id, self.component)
+            )
+            and (
+                self.command is not Command.START
+                or can_start(self.coordinator, self.device_id, self.component)
+            )
+        )
+
+    async def async_press(self) -> None:
+        if self.command is Command.START:
+            if not can_start(self.coordinator, self.device_id, self.component):
+                raise ServiceValidationError(
+                    "This oven component has not reported usable remote-start support"
+                )
+            await self.execute(
+                Command.START, [self.attribute_value(Attribute.OVEN_MODE, Capability.OVEN_MODE)]
+            )
+        else:
+            await self.execute(self.command)
+            if self.command is Command.REFRESH:
+                await self.coordinator.async_request_refresh()

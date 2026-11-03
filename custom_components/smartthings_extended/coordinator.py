@@ -1,4 +1,4 @@
-"""Share the native SmartThings session and subscribe to hood events."""
+"""Share the native SmartThings session and subscribe to appliance events."""
 
 from __future__ import annotations
 
@@ -37,10 +37,16 @@ _LOGGER = logging.getLogger(__name__)
 class HoodDevice:
     """Own a raw snapshot so native capability filtering cannot hide controls."""
 
-    status: ComponentStatus
+    components: dict[str, ComponentStatus]
     online: bool
     name: str
     manufacturer: str | None
+    model: str | None = None
+
+    @property
+    def status(self) -> ComponentStatus:
+        """Keep the original hood entity interface and IDs stable."""
+        return self.components.get(HOOD, {})
 
 
 class HoodCoordinator(DataUpdateCoordinator[dict[str, HoodDevice]]):
@@ -58,6 +64,14 @@ class HoodCoordinator(DataUpdateCoordinator[dict[str, HoodDevice]]):
         self._retry: Callable[[], None] | None = None
         self._recover_task: asyncio.Task | None = None
         self._closed = False
+
+    @staticmethod
+    def _model(components: dict[str, ComponentStatus]) -> str | None:
+        main = components.get("main", {})
+        model = main.get(Capability.SAMSUNG_CE_KITCHEN_DEVICE_IDENTIFICATION, {}).get(
+            Attribute.MODEL_CODE
+        )
+        return model.value if model is not None and isinstance(model.value, str) else None
 
     @property
     def source_available(self) -> bool:
@@ -84,13 +98,16 @@ class HoodCoordinator(DataUpdateCoordinator[dict[str, HoodDevice]]):
                 metadata = native.devices[device_id].device
                 ocf = metadata.ocf
                 devices[device_id] = HoodDevice(
-                    deepcopy(status.get(HOOD, {})),
+                    deepcopy(status),
                     health.state == HealthStatus.ONLINE,
-                    metadata.label or metadata.name or "Cooktop",
+                    metadata.label or metadata.name or "Appliance",
                     ocf.manufacturer_name if ocf is not None else metadata.device_manufacturer_code,
+                    self._model(status),
                 )
         except SmartThingsError as err:
-            raise UpdateFailed("Unable to read the hood through SmartThings") from err
+            raise UpdateFailed(
+                "Unable to read the selected appliances through SmartThings"
+            ) from err
         # A reload can complete while an old client's request is still running.
         if (
             source.state is not ConfigEntryState.LOADED
@@ -102,12 +119,13 @@ class HoodCoordinator(DataUpdateCoordinator[dict[str, HoodDevice]]):
             self._disconnect()
             self.client = client
             for device_id, device in devices.items():
-                for capability in device.status:
-                    self._subscriptions.append(
-                        client.add_device_capability_event_listener(
-                            device_id, HOOD, capability, self._event
+                for component, capabilities in device.components.items():
+                    for capability in capabilities:
+                        self._subscriptions.append(
+                            client.add_device_capability_event_listener(
+                                device_id, component, capability, self._event
+                            )
                         )
-                    )
                 self._subscriptions.append(
                     client.add_device_availability_event_listener(device_id, self._health)
                 )
@@ -115,17 +133,14 @@ class HoodCoordinator(DataUpdateCoordinator[dict[str, HoodDevice]]):
 
     @callback
     def _event(self, event: DeviceEvent) -> None:
-        if (
-            not self.source_available
-            or event.component_id != HOOD
-            or event.device_id not in self.data
-        ):
+        if not self.source_available or event.device_id not in self.data:
             return
         device = self.data[event.device_id]
-        if event.capability not in device.status:
+        component = device.components.get(event.component_id, {})
+        if event.capability not in component:
             return
-        previous = device.status[event.capability].get(event.attribute)
-        device.status[event.capability][event.attribute] = Status(
+        previous = component[event.capability].get(event.attribute)
+        component[event.capability][event.attribute] = Status(
             value=event.value, unit=previous.unit if previous else None, data=event.data
         )
         self.async_set_updated_data(self.data)
@@ -192,16 +207,30 @@ class HoodCoordinator(DataUpdateCoordinator[dict[str, HoodDevice]]):
         self._disconnect()
 
     async def command(
-        self, device_id: str, capability: Capability, command: Command, argument: Any = None
+        self,
+        device_id: str,
+        capability: Capability,
+        command: Command,
+        argument: Any = None,
+        *,
+        component: str = HOOD,
     ) -> None:
         if not self.source_available or self.client is None:
             raise HomeAssistantError("The native SmartThings connection is unavailable")
         try:
             kwargs = {"argument": argument} if argument is not None else {}
-            await self.client.execute_device_command(device_id, capability, command, HOOD, **kwargs)
+            await self.client.execute_device_command(
+                device_id, capability, command, component, **kwargs
+            )
         except SmartThingsError as err:
-            raise HomeAssistantError("SmartThings could not complete the hood command") from err
+            raise HomeAssistantError(
+                "SmartThings could not complete the appliance command"
+            ) from err
 
-    def value(self, device_id: str, capability: Capability, attribute: Attribute) -> Any:
-        status = self.data[device_id].status.get(capability, {}).get(attribute)
+    def value(
+        self, device_id: str, capability: Capability, attribute: Attribute, *, component: str = HOOD
+    ) -> Any:
+        status = (
+            self.data[device_id].components.get(component, {}).get(capability, {}).get(attribute)
+        )
         return status.value if status is not None else None

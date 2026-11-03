@@ -46,12 +46,33 @@ def native_data(entry: ConfigEntry) -> NativeData | None:
     return cast(NativeData, data)
 
 
-def hood_devices(entry: ConfigEntry) -> dict[str, str]:
-    """Offer devices with an advertised hood, including filtered capabilities."""
+def supported_devices(entry: ConfigEntry) -> dict[str, str]:
+    """Offer cooktops, ovens, ranges, and devices with a hood component."""
     if (data := native_data(entry)) is None:
         return {}
     return {
         device_id: full.device.label or full.device.name or device_id
         for device_id, full in data.devices.items()
-        if HOOD in full.device.components or HOOD in full.status
+        if HOOD in full.device.components
+        or HOOD in full.status
+        or any(
+            capability in full.status.get("main", {})
+            for capability in (
+                "custom.cooktopOperatingState",
+                "ovenMode",
+                "ovenOperatingState",
+                "samsungce.ovenMode",
+            )
+        )
+        or any(
+            str(capability)
+            in (
+                "custom.cooktopOperatingState",
+                "ovenMode",
+                "ovenOperatingState",
+                "samsungce.ovenMode",
+            )
+            for component in full.device.components.values()
+            for capability in component.capabilities
+        )
     }

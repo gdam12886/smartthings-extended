@@ -1,4 +1,4 @@
-"""Add selected hood features through the native SmartThings connection."""
+"""Extend appliances through the native SmartThings connection."""
 
 from __future__ import annotations
 
@@ -29,6 +29,9 @@ PLATFORMS = [
     Platform.NUMBER,
     Platform.BUTTON,
     Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.SELECT,
+    Platform.LOCK,
 ]
 
 
@@ -64,7 +67,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ExtendedConfigEntry) -> 
     active = {f"{device_id}_hood_{key}" for device_id in settings[CONF_DEVICES] for key in keys}
     registry = er.async_get(hass)
     for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
-        if entity.unique_id not in active:
+        appliance_selected = "appliance" in entry.runtime_data.features and any(
+            entity.unique_id.startswith(f"{device_id}_")
+            and not entity.unique_id.startswith(f"{device_id}_hood_")
+            for device_id in settings[CONF_DEVICES]
+        )
+        if entity.unique_id not in active and not appliance_selected:
             registry.async_remove(entity.entity_id)
     entry.async_on_unload(source.async_on_state_change(coordinator.source_changed))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

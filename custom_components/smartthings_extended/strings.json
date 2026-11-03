@@ -10,10 +10,10 @@
         }
       },
       "devices": {
-        "title": "Hood controls",
-        "description": "Choose the cooktops and extra hood controls to add.",
+        "title": "Appliances and controls",
+        "description": "Choose the cooktops and ovens to manage and the features to add.",
         "data": {
-          "device_ids": "Cooktops",
+          "device_ids": "Appliances",
           "features": "Extra controls",
           "timer_max_minutes": "Maximum timer duration"
         },
@@ -24,27 +24,27 @@
     },
     "error": {
       "native_not_ready": "The selected native SmartThings account is not ready.",
-      "invalid_selection": "Select at least one available cooktop and one feature group."
+      "invalid_selection": "Select at least one available appliance and one feature group."
     },
     "abort": {
       "native_required": "Set up the native SmartThings integration and wait for it to connect first.",
-      "no_supported_devices": "This account has no cooktops with a hood component.",
+      "no_supported_devices": "This account has no supported cooktops or ovens.",
       "already_configured": "This SmartThings account is already configured."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Hood controls",
+        "title": "Appliances and controls",
         "data": {
-          "device_ids": "Cooktops",
+          "device_ids": "Appliances",
           "features": "Extra controls",
           "timer_max_minutes": "Maximum timer duration"
         }
       }
     },
     "error": {
-      "invalid_selection": "Select at least one available cooktop and one feature group."
+      "invalid_selection": "Select at least one available appliance and one feature group."
     },
     "abort": {
       "native_required": "Reconnect the native SmartThings account first."
@@ -55,7 +55,8 @@
       "options": {
         "light": "Hood light",
         "fan": "Hood fan",
-        "timer": "Native hood timer"
+        "timer": "Native hood timer",
+        "appliance": "Appliance controls and sensors"
       }
     }
   },
@@ -81,6 +82,24 @@
       },
       "hood_timer_cancel": {
         "name": "Cancel hood timer"
+      },
+      "oven_stop": {
+        "name": "Stop oven"
+      },
+      "component_oven_stop": {
+        "name": "{component} stop oven"
+      },
+      "oven_start": {
+        "name": "Start oven"
+      },
+      "component_oven_start": {
+        "name": "{component} start oven"
+      },
+      "refresh": {
+        "name": "Refresh status"
+      },
+      "component_refresh": {
+        "name": "{component} refresh status"
       }
     },
     "sensor": {
@@ -94,11 +113,173 @@
           "running": "Running",
           "paused": "Paused"
         }
+      },
+      "operating_state": {
+        "name": "Operating state"
+      },
+      "component_operating_state": {
+        "name": "{component} operating state"
+      },
+      "oven_mode": {
+        "name": "Oven mode"
+      },
+      "component_oven_mode": {
+        "name": "{component} oven mode"
+      },
+      "samsung_oven_mode": {
+        "name": "Samsung oven mode"
+      },
+      "component_samsung_oven_mode": {
+        "name": "{component} Samsung oven mode"
+      },
+      "oven_machine_state": {
+        "name": "Oven machine state"
+      },
+      "component_oven_machine_state": {
+        "name": "{component} oven machine state"
+      },
+      "oven_job_state": {
+        "name": "Oven job state"
+      },
+      "component_oven_job_state": {
+        "name": "{component} oven job state"
+      },
+      "oven_completion_time": {
+        "name": "Oven completion time"
+      },
+      "component_oven_completion_time": {
+        "name": "{component} oven completion time"
+      },
+      "oven_progress": {
+        "name": "Oven progress"
+      },
+      "component_oven_progress": {
+        "name": "{component} oven progress"
+      },
+      "oven_operation_time": {
+        "name": "Oven operation time"
+      },
+      "component_oven_operation_time": {
+        "name": "{component} oven operation time"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "component_power": {
+        "name": "{component} power"
+      },
+      "energy": {
+        "name": "Energy"
+      },
+      "component_energy": {
+        "name": "{component} energy"
+      },
+      "software_versions": {
+        "name": "Software versions"
+      },
+      "component_software_versions": {
+        "name": "{component} software versions"
+      },
+      "child_lock_state": {
+        "name": "Child lock state"
+      },
+      "component_child_lock_state": {
+        "name": "{component} child lock state"
+      },
+      "software_update_state": {
+        "name": "Software update state"
+      },
+      "component_software_update_state": {
+        "name": "{component} software update state"
+      },
+      "software_update_progress": {
+        "name": "Software update progress"
+      },
+      "component_software_update_progress": {
+        "name": "{component} software update progress"
+      },
+      "driver_version": {
+        "name": "Driver version"
+      },
+      "component_driver_version": {
+        "name": "{component} driver version"
+      },
+      "software_last_updated": {
+        "name": "Software last updated"
+      },
+      "component_software_last_updated": {
+        "name": "{component} software last updated"
       }
     },
     "binary_sensor": {
       "hood_connection": {
         "name": "Hood connection"
+      },
+      "power_status": {
+        "name": "Power status"
+      },
+      "component_power_status": {
+        "name": "{component} power status"
+      },
+      "cooking": {
+        "name": "Cooking"
+      },
+      "component_cooking": {
+        "name": "{component} cooking"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "component_child_lock": {
+        "name": "{component} child lock"
+      },
+      "door": {
+        "name": "Door"
+      },
+      "component_door": {
+        "name": "{component} door"
+      },
+      "cavity_active": {
+        "name": "Cavity active"
+      },
+      "component_cavity_active": {
+        "name": "{component} cavity active"
+      },
+      "software_update_available": {
+        "name": "Software update available"
+      },
+      "component_software_update_available": {
+        "name": "{component} software update available"
+      }
+    },
+    "switch": {
+      "appliance_power": {
+        "name": "Power"
+      },
+      "component_appliance_power": {
+        "name": "{component} power"
+      }
+    },
+    "lock": {
+      "child_lock_control": {
+        "name": "Child lock control"
+      },
+      "component_child_lock_control": {
+        "name": "{component} child lock control"
+      }
+    },
+    "select": {
+      "oven_mode_control": {
+        "name": "Oven mode control"
+      },
+      "component_oven_mode_control": {
+        "name": "{component} oven mode control"
+      },
+      "samsung_oven_mode_control": {
+        "name": "Samsung oven mode control"
+      },
+      "component_samsung_oven_mode_control": {
+        "name": "{component} Samsung oven mode control"
       }
     }
   }
