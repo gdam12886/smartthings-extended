@@ -1,13 +1,15 @@
-"""Start and cancel the native hood countdown."""
+"""Appliance commands, oven clock synchronization, and hood timer buttons."""
 
 from homeassistant.components.button import ButtonEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 from pysmartthings import Attribute, Capability, Command
 
 from . import ExtendedConfigEntry
-from .appliances import appliance_components, can_start, cavity_active, enabled
+from .appliances import appliance_components, can_start, cavity_active, enabled, supports_clock_sync
 from .coordinator import HoodCoordinator
 from .entity import ApplianceEntity, HoodEntity
 
@@ -24,7 +26,7 @@ async def async_setup_entry(
 
         @callback
         def discover() -> None:
-            entities = []
+            entities: list[ButtonEntity] = []
             for device_id, component in appliance_components(coordinator):
                 for capability, command in (
                     (Capability.OVEN_OPERATING_STATE, Command.STOP),
@@ -44,6 +46,11 @@ async def async_setup_entry(
                             ApplianceButton(coordinator, device_id, component, capability, command)
                         )
                         known.add(key)
+            for device_id in coordinator.data:
+                key = (device_id, "main", Command.EXECUTE)
+                if key not in known and supports_clock_sync(coordinator, device_id):
+                    entities.append(OvenClockSync(coordinator, device_id))
+                    known.add(key)
             async_add_entities(entities)
 
         discover()
@@ -77,6 +84,30 @@ class HoodTimerButton(HoodEntity, ButtonEntity):
                 )
         await self.coordinator.command(
             self.device_id, Capability.SAMSUNG_CE_COUNT_DOWN_TIMER, self.command
+        )
+
+
+class OvenClockSync(ApplianceEntity, ButtonEntity):
+    """Send the current HA local wall-clock time to Samsung's oven clock resource."""
+
+    _attr_icon = "mdi:clock-check-outline"
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(self, coordinator: HoodCoordinator, device_id: str) -> None:
+        super().__init__(coordinator, device_id, "main", "sync_clock", Capability.EXECUTE)
+
+    @property
+    def available(self) -> bool:
+        return super().available and supports_clock_sync(self.coordinator, self.device_id)
+
+    async def async_press(self) -> None:
+        if not supports_clock_sync(self.coordinator, self.device_id):
+            raise ServiceValidationError("Clock synchronization is unavailable on this appliance")
+        # Samsung expects local wall time, without a UTC offset or fractional seconds.
+        local_time = dt_util.now().strftime("%Y-%m-%dT%H:%M:%S")
+        await self.execute(
+            Command.EXECUTE,
+            ["/configuration/vs/0", {"x.com.samsung.da.currentTime": local_time}],
         )
 
 

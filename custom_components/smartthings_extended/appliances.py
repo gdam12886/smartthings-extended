@@ -218,6 +218,24 @@ def appliance_components(coordinator: HoodCoordinator) -> Iterator[tuple[str, st
                 yield device_id, component
 
 
+def supports_clock_sync(coordinator: HoodCoordinator, device_id: str) -> bool:
+    """Limit Samsung's clock resource to Samsung ovens with enabled execute support."""
+    device = coordinator.data[device_id]
+    return (
+        "samsung" in (device.manufacturer or "").casefold()
+        and enabled(coordinator, device_id, "main", Capability.EXECUTE)
+        and any(
+            capability in status
+            for status in device.components.values()
+            for capability in (
+                Capability.OVEN_MODE,
+                Capability.SAMSUNG_CE_OVEN_MODE,
+                Capability.OVEN_OPERATING_STATE,
+            )
+        )
+    )
+
+
 def component_label(component: str) -> str:
     if component.startswith("cavity-") and component.split("-")[-1].isdigit():
         return f"Cavity {int(component.split('-')[-1])}"

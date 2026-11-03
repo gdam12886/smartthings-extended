@@ -175,6 +175,7 @@ def oven_status() -> dict:
     components["main"].update(
         {
             "refresh": {},
+            "execute": {"data": {"value": None}},
             "samsungce.kidsLock": {"lockState": {"value": "unlocked"}},
             "samsungce.kitchenDeviceIdentification": {"modelCode": {"value": "Test oven"}},
             "samsungce.softwareUpdate": {
